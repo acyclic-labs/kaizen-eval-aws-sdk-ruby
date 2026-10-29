@@ -1,20 +1,13 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - version-3
-
-  pull_request:
-    branches:
-      - version-3
-
+  workflow_dispatch:
 permissions:
   contents: read
 
 jobs:
   rbs-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +38,7 @@ jobs:
         run: bundle exec rake rbs:test
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
