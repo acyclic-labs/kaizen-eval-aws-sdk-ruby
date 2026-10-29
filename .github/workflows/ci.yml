@@ -23,10 +23,25 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install gems
+      - name: Resolve gems
+        id: gems
         run: |
           bundle config set --local with 'build rbs'
+          bundle config set --local path "$HOME/.bundle-gems"
+          bundle lock
+          echo "ruby=$(ruby -e 'print RUBY_DESCRIPTION' | sha256sum | cut -c1-16)" >> $GITHUB_OUTPUT
+
+      - name: Cache gems
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bundle-gems
+          key: gems-${{ runner.os }}-${{ steps.gems.outputs.ruby }}-rbs-${{ hashFiles('Gemfile.lock') }}
+          restore-keys: gems-${{ runner.os }}-${{ steps.gems.outputs.ruby }}-rbs-
+
+      - name: Install gems
+        run: |
           bundle install
+          bundle clean
 
       - name: Install rbs collection
         run: rbs collection install
@@ -59,10 +74,25 @@ jobs:
         run: |
           echo "${{ matrix.env }}=1" >> $GITHUB_ENV
 
-      - name: Install gems
+      - name: Resolve gems
+        id: gems
         run: |
           bundle config set --local with 'build test'
+          bundle config set --local path "$HOME/.bundle-gems"
+          bundle lock
+          echo "ruby=$(ruby -e 'print RUBY_DESCRIPTION' | sha256sum | cut -c1-16)" >> $GITHUB_OUTPUT
+
+      - name: Cache gems
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bundle-gems
+          key: gems-${{ runner.os }}-${{ steps.gems.outputs.ruby }}-${{ matrix.env }}-${{ hashFiles('Gemfile.lock') }}
+          restore-keys: gems-${{ runner.os }}-${{ steps.gems.outputs.ruby }}-${{ matrix.env }}-
+
+      - name: Install gems
+        run: |
           bundle install
+          bundle clean
 
       - name: Build SDK
         run: bundle exec rake build
